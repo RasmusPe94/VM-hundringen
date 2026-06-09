@@ -8,7 +8,7 @@ import {
   formatStatus
 } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { listBets, listUsers } from "@/lib/pocketbase/data";
 import { getParam } from "@/lib/strings";
 
 type ProfileOption = {
@@ -53,31 +53,12 @@ function matchName(bet: BetRow) {
 
 export default async function BetsPage({ searchParams }: BetsPageProps) {
   await requireUser();
-  const supabase = createSupabaseServerClient();
   const player = getParam(searchParams?.player);
   const status = getParam(searchParams?.status);
   const match = getParam(searchParams?.match).trim().toLowerCase();
 
-  const [profilesResult, betsResult] = await Promise.all([
-    supabase.from("profiles").select("id, display_name").order("display_name"),
-    supabase
-      .from("bets")
-      .select(
-        "id, user_id, match_label, description, odds, stake, status, payout, created_at, settled_at, profiles!bets_user_id_fkey(display_name, id), matches(match_no, starts_at, home_team, away_team, phase)"
-      )
-      .order("created_at", { ascending: false })
-  ]);
-
-  if (profilesResult.error) {
-    throw new Error(profilesResult.error.message);
-  }
-
-  if (betsResult.error) {
-    throw new Error(betsResult.error.message);
-  }
-
-  const profiles = (profilesResult.data ?? []) as ProfileOption[];
-  const bets = ((betsResult.data ?? []) as BetRow[]).filter((bet) => {
+  const [profiles, allBets] = await Promise.all([listUsers(), listBets()]);
+  const bets = (allBets as BetRow[]).filter((bet) => {
     const playerMatches = !player || bet.user_id === player;
     const statusMatches = !status || bet.status === status;
     const matchText = `${matchName(bet)} ${bet.match_label ?? ""}`.toLowerCase();
@@ -106,7 +87,7 @@ export default async function BetsPage({ searchParams }: BetsPageProps) {
             <option value="">Alla</option>
             {profiles.map((profile) => (
               <option key={profile.id} value={profile.id}>
-                {profile.display_name}
+                {profile.display_name || profile.username}
               </option>
             ))}
           </select>

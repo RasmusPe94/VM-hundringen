@@ -2,42 +2,21 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { formatCurrency, formatRoi } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-type LeaderboardRow = {
-  rank: number;
-  user_id: string;
-  display_name: string;
-  total_staked: number | string;
-  current_balance: number | string;
-  pending_stake: number | string;
-  potential_payout: number | string;
-  balance_including_possible_payout: number | string;
-  roi: number | string;
-  bet_count: number;
-  won_bet_count: number;
-};
+import { getLeaderboardRows } from "@/lib/pocketbase/data";
 
 export default async function LeaderboardPage() {
   await requireUser();
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase.from("leaderboard").select("*");
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const rows = (data ?? []) as LeaderboardRow[];
+  const rows = await getLeaderboardRows();
 
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Sorteringen kommer från databasvyn. Saldo och möjlig vinst räknas i Supabase, inte i frontend."
-        title="Leaderboard"
+        description="Saldo och möjlig vinst räknas på servern med samma regler som Excel-filen."
+        title="Topplista"
       />
       {rows.length === 0 ? (
         <EmptyState
-          text="När deltagare finns i Supabase visas tabellen här."
+          text="När deltagare finns i PocketBase visas tabellen här."
           title="Inga deltagare än"
         />
       ) : (
@@ -49,7 +28,7 @@ export default async function LeaderboardPage() {
                 <th className="px-4 py-3">Namn</th>
                 <th className="px-4 py-3">Totalt satsat</th>
                 <th className="px-4 py-3">Nuvarande saldo</th>
-                <th className="px-4 py-3">Pending stake</th>
+                <th className="px-4 py-3">Pågående insats</th>
                 <th className="px-4 py-3">Möjlig vinst</th>
                 <th className="px-4 py-3">Saldo + möjlig vinst</th>
                 <th className="px-4 py-3">ROI</th>

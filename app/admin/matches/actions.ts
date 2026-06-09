@@ -2,7 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  createMatch,
+  deleteMatch,
+  setCompetitionLocked,
+  updateMatch
+} from "@/lib/pocketbase/data";
 import { redirectPath } from "@/lib/strings";
 import { formError, matchInputSchema } from "@/lib/validation";
 
@@ -24,17 +29,22 @@ export async function createMatchAction(formData: FormData) {
     redirect(redirectPath("/admin/matches", "error", formError(parsed.error)));
   }
 
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase.from("matches").insert({
-    match_no: parsed.data.match_no,
-    starts_at: parsed.data.starts_at ?? null,
-    home_team: parsed.data.home_team,
-    away_team: parsed.data.away_team,
-    phase: parsed.data.phase ?? null
-  });
-
-  if (error) {
-    redirect(redirectPath("/admin/matches", "error", error.message));
+  try {
+    await createMatch({
+      away_team: parsed.data.away_team,
+      home_team: parsed.data.home_team,
+      match_no: parsed.data.match_no,
+      phase: parsed.data.phase,
+      starts_at: parsed.data.starts_at
+    });
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/admin/matches",
+        "error",
+        error instanceof Error ? error.message : "Matchen kunde inte skapas."
+      )
+    );
   }
 
   redirect(redirectPath("/admin/matches", "message", "Matchen är skapad."));
@@ -53,20 +63,22 @@ export async function updateMatchAction(formData: FormData) {
     redirect(redirectPath("/admin/matches", "error", formError(parsed.error)));
   }
 
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase
-    .from("matches")
-    .update({
-      match_no: parsed.data.match_no,
-      starts_at: parsed.data.starts_at ?? null,
-      home_team: parsed.data.home_team,
+  try {
+    await updateMatch(id, {
       away_team: parsed.data.away_team,
-      phase: parsed.data.phase ?? null
-    })
-    .eq("id", id);
-
-  if (error) {
-    redirect(redirectPath("/admin/matches", "error", error.message));
+      home_team: parsed.data.home_team,
+      match_no: parsed.data.match_no,
+      phase: parsed.data.phase,
+      starts_at: parsed.data.starts_at
+    });
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/admin/matches",
+        "error",
+        error instanceof Error ? error.message : "Matchen kunde inte uppdateras."
+      )
+    );
   }
 
   redirect(redirectPath("/admin/matches", "message", "Matchen är uppdaterad."));
@@ -80,11 +92,16 @@ export async function deleteMatchAction(formData: FormData) {
     redirect(redirectPath("/admin/matches", "error", "Saknar match-id."));
   }
 
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase.from("matches").delete().eq("id", id);
-
-  if (error) {
-    redirect(redirectPath("/admin/matches", "error", error.message));
+  try {
+    await deleteMatch(id);
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/admin/matches",
+        "error",
+        error instanceof Error ? error.message : "Matchen kunde inte tas bort."
+      )
+    );
   }
 
   redirect(redirectPath("/admin/matches", "message", "Matchen är borttagen."));
@@ -93,17 +110,16 @@ export async function deleteMatchAction(formData: FormData) {
 export async function updateCompetitionLockAction(formData: FormData) {
   const { user } = await requireAdmin();
   const locked = formData.get("locked") === "on";
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase
-    .from("competition_settings")
-    .update({
-      locked,
-      updated_by: user.id
-    })
-    .eq("id", true);
-
-  if (error) {
-    redirect(redirectPath("/admin/matches", "error", error.message));
+  try {
+    await setCompetitionLocked(locked, user.id);
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/admin/matches",
+        "error",
+        error instanceof Error ? error.message : "Låset kunde inte sparas."
+      )
+    );
   }
 
   redirect(

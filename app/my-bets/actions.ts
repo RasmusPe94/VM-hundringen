@@ -3,7 +3,12 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { money, toNumber } from "@/lib/format";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  deleteBet,
+  getCurrentBalance,
+  getPendingOwnBet,
+  updateOwnPendingBet
+} from "@/lib/pocketbase/data";
 import { redirectPath } from "@/lib/strings";
 import { betInputSchema, formError } from "@/lib/validation";
 
@@ -26,37 +31,16 @@ export async function updateMyBetAction(formData: FormData) {
     redirect(redirectPath("/my-bets", "error", formError(parsed.error)));
   }
 
-  const supabase = createSupabaseServerClient();
-  const existingResult = await supabase
-    .from("bets")
-    .select("stake")
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .eq("status", "pending")
-    .maybeSingle();
+  const existing = await getPendingOwnBet(id, user.id);
 
-  if (existingResult.error) {
-    redirect(redirectPath("/my-bets", "error", existingResult.error.message));
-  }
-
-  if (!existingResult.data) {
+  if (!existing) {
     redirect(
       redirectPath("/my-bets", "error", "Du kan bara ändra egna pågående spel.")
     );
   }
 
-  const balanceResult = await supabase
-    .from("leaderboard")
-    .select("current_balance")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (balanceResult.error) {
-    redirect(redirectPath("/my-bets", "error", balanceResult.error.message));
-  }
-
-  const currentBalance = toNumber(balanceResult.data?.current_balance);
-  const oldStake = toNumber(existingResult.data.stake);
+  const currentBalance = toNumber(await getCurrentBalance(user.id));
+  const oldStake = toNumber(existing.stake);
   const newStake = money(parsed.data.stake);
 
   if (newStake > currentBalance + oldStake) {
@@ -69,21 +53,22 @@ export async function updateMyBetAction(formData: FormData) {
     );
   }
 
-  const { error } = await supabase
-    .from("bets")
-    .update({
-      match_id: parsed.data.match_id ?? null,
-      match_label: parsed.data.match_label ?? null,
+  try {
+    await updateOwnPendingBet(id, {
       description: parsed.data.description,
+      match_id: parsed.data.match_id,
+      match_label: parsed.data.match_label,
       odds: money(parsed.data.odds),
       stake: newStake
-    })
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .eq("status", "pending");
-
-  if (error) {
-    redirect(redirectPath("/my-bets", "error", error.message));
+    });
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/my-bets",
+        "error",
+        error instanceof Error ? error.message : "Spelet kunde inte uppdateras."
+      )
+    );
   }
 
   redirect(redirectPath("/my-bets", "message", "Spelet är uppdaterat."));
@@ -97,16 +82,24 @@ export async function deleteMyBetAction(formData: FormData) {
     redirect(redirectPath("/my-bets", "error", "Saknar bet-id."));
   }
 
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase
-    .from("bets")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id)
-    .eq("status", "pending");
+  const existing = await getPendingOwnBet(id, user.id);
 
-  if (error) {
-    redirect(redirectPath("/my-bets", "error", error.message));
+  if (!existing) {
+    redirect(
+      redirectPath("/my-bets", "error", "Du kan bara ta bort egna pågående spel.")
+    );
+  }
+
+  try {
+    await deleteBet(id);
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/my-bets",
+        "error",
+        error instanceof Error ? error.message : "Spelet kunde inte tas bort."
+      )
+    );
   }
 
   redirect(redirectPath("/my-bets", "message", "Spelet är borttaget."));

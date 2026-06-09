@@ -18,14 +18,14 @@ const optionalMoneyFromForm = z.preprocess((value) => {
   return value ?? undefined;
 }, z.number({ invalid_type_error: "Ange ett giltigt tal." }).finite().optional());
 
-const optionalUuid = z.preprocess((value) => {
+const optionalRecordId = z.preprocess((value) => {
   if (typeof value !== "string") {
     return undefined;
   }
 
   const trimmed = value.trim();
   return trimmed === "" ? undefined : trimmed;
-}, z.string().uuid("Välj en giltig match.").optional());
+}, z.string().min(1, "Välj en giltig match.").optional());
 
 const trimmedOptionalText = z.preprocess((value) => {
   if (typeof value !== "string") {
@@ -38,7 +38,7 @@ const trimmedOptionalText = z.preprocess((value) => {
 
 export const betInputSchema = z
   .object({
-    match_id: optionalUuid,
+    match_id: optionalRecordId,
     match_label: trimmedOptionalText,
     description: z.string().trim().min(1, "Beskrivning krävs."),
     odds: numberFromForm.refine((value) => value > 1, "Odds måste vara över 1."),
@@ -65,7 +65,7 @@ export const matchInputSchema = z.object({
 });
 
 export const settleInputSchema = z.object({
-  id: z.string().uuid("Ogiltigt bet-id."),
+  id: z.string().trim().min(1, "Ogiltigt bet-id."),
   status: z.enum(["won", "lost", "void"]),
   payout: optionalMoneyFromForm
 });

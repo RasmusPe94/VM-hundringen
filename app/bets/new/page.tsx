@@ -3,17 +3,8 @@ import { PageHeader } from "@/components/page-header";
 import { SubmitButton } from "@/components/submit-button";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentBalance, listMatches } from "@/lib/pocketbase/data";
 import { createBetAction } from "./actions";
-
-type MatchOption = {
-  id: string;
-  match_no: number;
-  starts_at: string | null;
-  home_team: string;
-  away_team: string;
-  phase: string | null;
-};
 
 type NewBetPageProps = {
   searchParams?: Record<string, string | string[] | undefined>;
@@ -21,35 +12,15 @@ type NewBetPageProps = {
 
 export default async function NewBetPage({ searchParams }: NewBetPageProps) {
   const { user } = await requireUser();
-  const supabase = createSupabaseServerClient();
-  const [matchesResult, balanceResult] = await Promise.all([
-    supabase
-      .from("matches")
-      .select("id, match_no, starts_at, home_team, away_team, phase")
-      .order("match_no", { ascending: true }),
-    supabase
-      .from("leaderboard")
-      .select("current_balance")
-      .eq("user_id", user.id)
-      .maybeSingle()
+  const [matches, currentBalance] = await Promise.all([
+    listMatches(),
+    getCurrentBalance(user.id)
   ]);
-
-  if (matchesResult.error) {
-    throw new Error(matchesResult.error.message);
-  }
-
-  if (balanceResult.error) {
-    throw new Error(balanceResult.error.message);
-  }
-
-  const matches = (matchesResult.data ?? []) as MatchOption[];
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <PageHeader
-        description={`Nuvarande saldo: ${formatCurrency(
-          balanceResult.data?.current_balance
-        )}`}
+        description={`Nuvarande saldo: ${formatCurrency(currentBalance)}`}
         title="Nytt spel"
       />
       <MessageBanner searchParams={searchParams} />

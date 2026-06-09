@@ -1,19 +1,13 @@
-export function hasSupabaseEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+export function hasPocketBaseEnv() {
+  return Boolean(process.env.POCKETBASE_URL);
 }
 
-export function getSupabaseEnv() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export function getPocketBaseEnv() {
+  const url = process.env.POCKETBASE_URL;
 
-  if (!url || !anonKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY."
-    );
+  if (!url) {
+    throw new Error("Missing POCKETBASE_URL.");
   }
 
-  return { url, anonKey };
+  return { url: url.replace(/\/$/, "") };
 }

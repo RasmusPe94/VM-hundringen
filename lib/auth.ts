@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import { hasSupabaseEnv } from "@/lib/env";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hasPocketBaseEnv } from "@/lib/env";
+import { getAuthToken } from "@/lib/pocketbase/client";
+import { refreshUserAuth } from "@/lib/pocketbase/data";
 
 export type Profile = {
   id: string;
@@ -10,45 +11,52 @@ export type Profile = {
 };
 
 export async function getUserProfile() {
-  if (!hasSupabaseEnv()) {
+  if (!hasPocketBaseEnv()) {
     return {
       user: null,
       profile: null,
-      supabaseConfigured: false
+      pocketBaseConfigured: false
     };
   }
 
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+  const token = getAuthToken();
 
-  if (!user) {
+  if (!token) {
     return {
       user: null,
       profile: null,
-      supabaseConfigured: true
+      pocketBaseConfigured: true
     };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, display_name, role, starting_bankroll")
-    .eq("id", user.id)
-    .maybeSingle();
+  try {
+    const { record } = await refreshUserAuth(token);
+    const profile = {
+      display_name: record.display_name || record.username,
+      id: record.id,
+      role: record.role,
+      starting_bankroll: record.starting_bankroll
+    } satisfies Profile;
 
-  return {
-    user,
-    profile: profile as Profile | null,
-    supabaseConfigured: true
-  };
+    return {
+      user: record,
+      profile,
+      pocketBaseConfigured: true
+    };
+  } catch {
+    return {
+      user: null,
+      profile: null,
+      pocketBaseConfigured: true
+    };
+  }
 }
 
 export async function requireUser() {
   const session = await getUserProfile();
 
-  if (!session.supabaseConfigured) {
-    redirect("/login?error=Supabase-miljovariabler saknas.");
+  if (!session.pocketBaseConfigured) {
+    redirect("/login?error=PocketBase-miljovariabel saknas.");
   }
 
   if (!session.user) {
@@ -58,7 +66,7 @@ export async function requireUser() {
   return {
     user: session.user,
     profile: session.profile,
-    supabaseConfigured: true
+    pocketBaseConfigured: true
   };
 }
 

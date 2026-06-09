@@ -6,34 +6,28 @@ Private football tournament betting competition for a friend group. The app repl
 
 - Next.js App Router
 - TypeScript
-- Supabase Postgres + Auth
+- PocketBase
 - Tailwind CSS
 - Zod validation
 - Server actions for mutations
 
-## Supabase setup
+## PocketBase setup
 
-1. Create a Supabase project.
-2. Open the SQL editor.
-3. Run `supabase-schema.sql`.
-4. Create your first user through Supabase Auth. The app login uses magic links but does not create unknown users.
-5. Promote the first admin in SQL:
+1. Start a PocketBase instance.
+2. Create the collections in `pocketbase-schema.md`.
+3. Create users in PocketBase with username and password. Email is not needed.
+4. Promote the first admin by setting the user's `role` field to `admin`.
 
-```sql
-update public.profiles
-set role = 'admin'
-where id = 'USER_UUID_HERE';
-```
-
-The migration creates RLS policies so authenticated users can see all bets, create only their own pending bets, and edit/delete only their own pending bets. Admins can manage matches, profiles, competition settings, and settlement. Add participants by creating or inviting users in Supabase Auth, then manage their profile rows as admin or through SQL.
+The PocketBase rules keep the app private: logged-in users can read the pool,
+create and manage only their own pending bets, and admins can manage matches,
+settings and settlement.
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` and fill in:
+Create `.env.local` with:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+POCKETBASE_URL=http://127.0.0.1:8090
 ```
 
 ## Run locally
@@ -63,7 +57,5 @@ The calculation test covers the Excel-equivalent examples:
 
 1. Push this repo to GitHub.
 2. Import the repo in Vercel.
-3. Add the same Supabase environment variables.
+3. Add the same PocketBase environment variable.
 4. Deploy.
-
-Use the deployed URL as an allowed redirect URL in Supabase Auth settings so magic links return to the app.

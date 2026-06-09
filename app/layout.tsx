@@ -9,8 +9,10 @@ export const metadata: Metadata = {
   description: "Privat bettingtävling för fotbolls-VM 2026"
 };
 
+export const dynamic = "force-dynamic";
+
 const navItems = [
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/leaderboard", label: "Topplista" },
   { href: "/bets", label: "Alla spel" },
   { href: "/my-bets", label: "Mina spel" },
   { href: "/bets/new", label: "Nytt spel" },
@@ -27,7 +29,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { user, profile, supabaseConfigured } = await getUserProfile();
+  const { user, profile, pocketBaseConfigured } = await getUserProfile();
   const isAdmin = profile?.role === "admin";
 
   return (
@@ -47,7 +49,7 @@ export default async function RootLayout({
                   {user ? (
                     <>
                       <span className="rounded-md bg-paper px-3 py-2 font-medium text-neutral-700">
-                        {profile?.display_name ?? user.email}
+                        {profile?.display_name ?? user.username}
                       </span>
                       <form action={signOutAction}>
                         <button
@@ -94,9 +96,9 @@ export default async function RootLayout({
               ) : null}
             </div>
           </header>
-          {!supabaseConfigured ? (
+          {!pocketBaseConfigured ? (
             <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              Lägg till Supabase-miljövariabler för att aktivera inloggning och data.
+              Lägg till POCKETBASE_URL för att aktivera inloggning och data.
             </div>
           ) : null}
           <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">

@@ -3,7 +3,7 @@ import { MessageBanner } from "@/components/message-banner";
 import { PageHeader } from "@/components/page-header";
 import { formatCurrency, formatDate, formatDecimal, toNumber } from "@/lib/format";
 import { requireAdmin } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { listPendingBets } from "@/lib/pocketbase/data";
 import { SettleForm } from "./settle-form";
 
 type BetRow = {
@@ -37,20 +37,7 @@ export default async function AdminSettlePage({
   searchParams
 }: AdminSettlePageProps) {
   await requireAdmin();
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("bets")
-    .select(
-      "id, match_label, description, odds, stake, created_at, profiles!bets_user_id_fkey(display_name), matches(match_no, home_team, away_team)"
-    )
-    .eq("status", "pending")
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const bets = (data ?? []) as BetRow[];
+  const bets = (await listPendingBets()) as BetRow[];
 
   return (
     <div className="space-y-6">

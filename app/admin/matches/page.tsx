@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { SubmitButton } from "@/components/submit-button";
 import { formatDate } from "@/lib/format";
 import { requireAdmin } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCompetitionSettings, listMatches } from "@/lib/pocketbase/data";
 import {
   createMatchAction,
   deleteMatchAction,
@@ -11,20 +11,11 @@ import {
   updateMatchAction
 } from "./actions";
 
-type MatchRow = {
-  id: string;
-  match_no: number;
-  starts_at: string | null;
-  home_team: string;
-  away_team: string;
-  phase: string | null;
-};
-
 type AdminMatchesPageProps = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
 
-function dateTimeLocalValue(value: string | null) {
+function dateTimeLocalValue(value: string | null | undefined) {
   if (!value) {
     return "";
   }
@@ -36,29 +27,11 @@ export default async function AdminMatchesPage({
   searchParams
 }: AdminMatchesPageProps) {
   await requireAdmin();
-  const supabase = createSupabaseServerClient();
-  const [matchesResult, settingsResult] = await Promise.all([
-    supabase
-      .from("matches")
-      .select("id, match_no, starts_at, home_team, away_team, phase")
-      .order("match_no", { ascending: true }),
-    supabase
-      .from("competition_settings")
-      .select("locked")
-      .eq("id", true)
-      .maybeSingle()
+  const [matches, settings] = await Promise.all([
+    listMatches(),
+    getCompetitionSettings()
   ]);
-
-  if (matchesResult.error) {
-    throw new Error(matchesResult.error.message);
-  }
-
-  if (settingsResult.error) {
-    throw new Error(settingsResult.error.message);
-  }
-
-  const matches = (matchesResult.data ?? []) as MatchRow[];
-  const locked = Boolean(settingsResult.data?.locked);
+  const locked = Boolean(settings?.locked);
 
   return (
     <div className="space-y-6">

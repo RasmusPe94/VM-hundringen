@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { money, toNumber } from "@/lib/format";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPendingBet, settleBet } from "@/lib/pocketbase/data";
 import { redirectPath } from "@/lib/strings";
 import { formError, settleInputSchema } from "@/lib/validation";
 
@@ -19,24 +19,14 @@ export async function settleBetAction(formData: FormData) {
     redirect(redirectPath("/admin/settle", "error", formError(parsed.error)));
   }
 
-  const supabase = createSupabaseServerClient();
-  const betResult = await supabase
-    .from("bets")
-    .select("stake, odds")
-    .eq("id", parsed.data.id)
-    .eq("status", "pending")
-    .maybeSingle();
+  const bet = await getPendingBet(parsed.data.id);
 
-  if (betResult.error) {
-    redirect(redirectPath("/admin/settle", "error", betResult.error.message));
-  }
-
-  if (!betResult.data) {
+  if (!bet) {
     redirect(redirectPath("/admin/settle", "error", "Spelet är inte pågående."));
   }
 
-  const stake = toNumber(betResult.data.stake);
-  const odds = toNumber(betResult.data.odds);
+  const stake = toNumber(bet.stake);
+  const odds = toNumber(bet.odds);
   const defaultPayouts = {
     won: stake * odds,
     lost: 0,
@@ -44,19 +34,16 @@ export async function settleBetAction(formData: FormData) {
   };
   const payout = money(parsed.data.payout ?? defaultPayouts[parsed.data.status]);
 
-  const { error } = await supabase
-    .from("bets")
-    .update({
-      status: parsed.data.status,
-      payout,
-      settled_at: new Date().toISOString(),
-      settled_by: user.id
-    })
-    .eq("id", parsed.data.id)
-    .eq("status", "pending");
-
-  if (error) {
-    redirect(redirectPath("/admin/settle", "error", error.message));
+  try {
+    await settleBet(parsed.data.id, parsed.data.status, payout, user.id);
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/admin/settle",
+        "error",
+        error instanceof Error ? error.message : "Spelet kunde inte avgöras."
+      )
+    );
   }
 
   redirect(redirectPath("/admin/settle", "message", "Spelet är avgjort."));

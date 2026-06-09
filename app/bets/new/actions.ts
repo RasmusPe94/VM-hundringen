@@ -3,7 +3,11 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { money, toNumber } from "@/lib/format";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  createBet,
+  getCompetitionSettings,
+  getCurrentBalance
+} from "@/lib/pocketbase/data";
 import { redirectPath } from "@/lib/strings";
 import { betInputSchema, formError } from "@/lib/validation";
 
@@ -21,32 +25,13 @@ export async function createBetAction(formData: FormData) {
     redirect(redirectPath("/bets/new", "error", formError(parsed.error)));
   }
 
-  const supabase = createSupabaseServerClient();
-  const settingsResult = await supabase
-    .from("competition_settings")
-    .select("locked")
-    .eq("id", true)
-    .maybeSingle();
+  const settings = await getCompetitionSettings();
 
-  if (settingsResult.error) {
-    redirect(redirectPath("/bets/new", "error", settingsResult.error.message));
-  }
-
-  if (settingsResult.data?.locked) {
+  if (settings?.locked) {
     redirect(redirectPath("/bets/new", "error", "Tävlingen är låst."));
   }
 
-  const balanceResult = await supabase
-    .from("leaderboard")
-    .select("current_balance")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (balanceResult.error) {
-    redirect(redirectPath("/bets/new", "error", balanceResult.error.message));
-  }
-
-  const currentBalance = toNumber(balanceResult.data?.current_balance);
+  const currentBalance = toNumber(await getCurrentBalance(user.id));
   const stake = money(parsed.data.stake);
 
   if (stake > currentBalance) {
@@ -59,18 +44,22 @@ export async function createBetAction(formData: FormData) {
     );
   }
 
-  const { error } = await supabase.from("bets").insert({
-    user_id: user.id,
-    match_id: parsed.data.match_id ?? null,
-    match_label: parsed.data.match_label ?? null,
-    description: parsed.data.description,
-    odds: money(parsed.data.odds),
-    stake,
-    status: "pending"
-  });
-
-  if (error) {
-    redirect(redirectPath("/bets/new", "error", error.message));
+  try {
+    await createBet(user.id, {
+      description: parsed.data.description,
+      match_id: parsed.data.match_id,
+      match_label: parsed.data.match_label,
+      odds: money(parsed.data.odds),
+      stake
+    });
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/bets/new",
+        "error",
+        error instanceof Error ? error.message : "Spelet kunde inte sparas."
+      )
+    );
   }
 
   redirect(redirectPath("/my-bets", "message", "Spelet är sparat."));

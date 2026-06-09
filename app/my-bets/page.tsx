@@ -5,7 +5,7 @@ import { StatusPill } from "@/components/status-pill";
 import { SubmitButton } from "@/components/submit-button";
 import { formatCurrency, formatDate, formatDecimal, toNumber } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { listMatches, listMyBets } from "@/lib/pocketbase/data";
 import { deleteMyBetAction, updateMyBetAction } from "./actions";
 
 type MatchOption = {
@@ -42,31 +42,10 @@ function matchName(bet: BetRow) {
 
 export default async function MyBetsPage({ searchParams }: MyBetsPageProps) {
   const { user } = await requireUser();
-  const supabase = createSupabaseServerClient();
-  const [matchesResult, betsResult] = await Promise.all([
-    supabase
-      .from("matches")
-      .select("id, match_no, home_team, away_team")
-      .order("match_no", { ascending: true }),
-    supabase
-      .from("bets")
-      .select(
-        "id, match_id, match_label, description, odds, stake, status, payout, created_at, matches(id, match_no, home_team, away_team)"
-      )
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
+  const [matches, bets] = await Promise.all([
+    listMatches(),
+    listMyBets(user.id)
   ]);
-
-  if (matchesResult.error) {
-    throw new Error(matchesResult.error.message);
-  }
-
-  if (betsResult.error) {
-    throw new Error(betsResult.error.message);
-  }
-
-  const matches = (matchesResult.data ?? []) as MatchOption[];
-  const bets = (betsResult.data ?? []) as BetRow[];
 
   return (
     <div className="space-y-6">

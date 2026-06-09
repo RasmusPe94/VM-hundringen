@@ -1,47 +1,41 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { hasSupabaseEnv } from "@/lib/env";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { hasPocketBaseEnv } from "@/lib/env";
+import { setAuthToken } from "@/lib/pocketbase/client";
+import { authWithUsername } from "@/lib/pocketbase/data";
 import { redirectPath } from "@/lib/strings";
 
-export async function signInWithMagicLink(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+export async function signInAction(formData: FormData) {
+  const username = String(formData.get("username") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
 
-  if (!email) {
-    redirect(redirectPath("/login", "error", "Ange en e-postadress."));
+  if (!username || !password) {
+    redirect(redirectPath("/login", "error", "Ange användare och lösenord."));
   }
 
-  if (!hasSupabaseEnv()) {
+  if (!hasPocketBaseEnv()) {
     redirect(
       redirectPath(
         "/login",
         "error",
-        "Supabase-miljövariabler saknas. Se README.md."
+        "PocketBase-miljövariabel saknas. Se README.md."
       )
     );
   }
 
-  const origin = headers().get("origin") ?? "http://localhost:3000";
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback`,
-      shouldCreateUser: false
-    }
-  });
-
-  if (error) {
-    redirect(redirectPath("/login", "error", error.message));
+  try {
+    const auth = await authWithUsername(username, password);
+    setAuthToken(auth.token);
+  } catch (error) {
+    redirect(
+      redirectPath(
+        "/login",
+        "error",
+        error instanceof Error ? error.message : "Kunde inte logga in."
+      )
+    );
   }
 
-  redirect(
-    redirectPath(
-      "/login",
-      "message",
-      "Kolla din mejl och öppna länken för att logga in."
-    )
-  );
+  redirect("/leaderboard");
 }
