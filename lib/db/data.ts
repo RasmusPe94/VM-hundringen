@@ -86,7 +86,15 @@ export function listPlayers(): PlayerRecord[] {
 
 export function createPlayer(name: string): PlayerRecord {
   const id = randomUUID();
-  getDb().prepare("INSERT INTO players (id, name) VALUES (?, ?)").run(id, name);
+  try {
+    getDb().prepare("INSERT INTO players (id, name) VALUES (?, ?)").run(id, name);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.includes("UNIQUE constraint failed")) {
+      throw new Error(`Namnet "${name}" är redan taget – välj dig i listan ovan.`);
+    }
+    throw e;
+  }
   return getDb().prepare("SELECT * FROM players WHERE id = ?").get(id) as PlayerRecord;
 }
 

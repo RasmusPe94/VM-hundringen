@@ -57,4 +57,10 @@ function migrate(db: Database.Database) {
 
     INSERT OR IGNORE INTO competition_settings (id, locked) VALUES ('default', 0);
   `);
+
+  // Migration: unique index on players.name (case-insensitive)
+  db.exec(`
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_players_name
+    ON players (name COLLATE NOCASE);
+  `);
 }
