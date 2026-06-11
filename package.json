@@ -24,6 +24,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.7.10",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.12",
