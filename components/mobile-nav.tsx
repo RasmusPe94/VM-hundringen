@@ -11,10 +11,12 @@ type MobileNavProps = {
   adminItems: NavItem[];
   isAdmin: boolean;
   playerName: string | null;
+  playerId: string | null;
+  avatarExt: string | null;
   showUser: boolean;
 };
 
-export function MobileNav({ navItems, adminItems, isAdmin, playerName, showUser }: MobileNavProps) {
+export function MobileNav({ navItems, adminItems, isAdmin, playerName, playerId, avatarExt, showUser }: MobileNavProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -42,8 +44,16 @@ export function MobileNav({ navItems, adminItems, isAdmin, playerName, showUser 
         <div className="absolute left-0 right-0 top-full z-50 border-b border-border bg-surface/95 backdrop-blur-sm shadow-lg md:hidden">
           <div className="mx-auto max-w-6xl space-y-1 px-4 py-3">
             {playerName && (
-              <div className="mb-2 rounded-md bg-rim px-3 py-2 text-sm font-medium text-body">
-                👤 {playerName}
+              <div className="mb-2 flex items-center gap-2 rounded-md bg-rim px-3 py-2 text-sm font-medium text-body">
+                {avatarExt && playerId ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={`/api/avatar/${playerId}`} alt={playerName} width={24} height={24} className="rounded-full object-cover shrink-0" />
+                ) : (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-border text-xs font-bold text-muted shrink-0">
+                    {playerName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {playerName}
               </div>
             )}
 

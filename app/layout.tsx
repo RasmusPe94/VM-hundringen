@@ -54,8 +54,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <div className="hidden md:flex items-center gap-2 text-sm">
                   {user ? (
                     <>
-                      <span className="rounded-md bg-rim border border-border px-3 py-1.5 text-sm font-medium text-body">
-                        👤 {profile?.display_name}
+                      <span className="flex items-center gap-2 rounded-md bg-rim border border-border px-3 py-1.5 text-sm font-medium text-body">
+                        {user.avatar_ext ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={`/api/avatar/${user.id}`} alt={user.name} width={22} height={22} className="rounded-full object-cover shrink-0" />
+                        ) : (
+                          <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-border text-xs font-bold text-muted shrink-0">
+                            {user.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        {profile?.display_name}
                       </span>
                       <form action={signOutAction}>
                         <button className="focus-ring rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-muted transition hover:border-gold/50 hover:text-gold">
@@ -88,6 +96,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     adminItems={isAdmin ? adminItems : []}
                     isAdmin={isAdmin}
                     playerName={profile?.display_name ?? null}
+                    playerId={user?.id ?? null}
+                    avatarExt={user?.avatar_ext ?? null}
                     showUser={!!user}
                   />
                 )}
