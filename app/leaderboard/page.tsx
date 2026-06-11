@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { formatCurrency, formatRoi } from "@/lib/format";
@@ -107,6 +108,13 @@ export default async function LeaderboardPage() {
           </div>
         </>
       )}
+      {/* Floating action button – mobile only */}
+      <Link
+        href="/bets/new"
+        className="md:hidden fixed bottom-6 right-5 flex items-center gap-2 rounded-full bg-turf px-5 py-3 text-sm font-bold text-white shadow-lg active:scale-95 transition-transform"
+      >
+        <span className="text-lg leading-none">+</span> Nytt spel
+      </Link>
     </div>
   );
 }
