@@ -1,10 +1,11 @@
 import { MessageBanner } from "@/components/message-banner";
 import { PageHeader } from "@/components/page-header";
 import { SubmitButton } from "@/components/submit-button";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
 import { getCurrentBalance, listMatches } from "@/lib/db/data";
 import { createBetAction } from "./actions";
+import { MatchSelect } from "./match-select";
 
 type NewBetPageProps = {
   searchParams?: Record<string, string | string[] | undefined>;
@@ -28,24 +29,7 @@ export default async function NewBetPage({ searchParams }: NewBetPageProps) {
         action={createBetAction}
         className="space-y-5 rounded-lg border border-border bg-surface p-5 shadow-card"
       >
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-bright" htmlFor="match_id">
-            Match
-          </label>
-          <select
-            className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
-            id="match_id"
-            name="match_id"
-          >
-            <option value="">Välj match eller ange fritext nedan</option>
-            {matches.map((match) => (
-              <option key={match.id} value={match.id}>
-                #{match.match_no} {match.home_team} - {match.away_team} ·{" "}
-                {match.phase ?? "Grupp"} · {formatDate(match.starts_at)}
-              </option>
-            ))}
-          </select>
-        </div>
+        <MatchSelect matches={matches} />
         <div className="space-y-2">
           <label
             className="text-sm font-semibold text-bright"
