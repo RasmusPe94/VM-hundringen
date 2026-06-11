@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import fs from "fs";
 import path from "path";
 import { requireUser } from "@/lib/auth";
-import { setPlayerAvatar } from "@/lib/db/data";
+import { setPlayerAvatar, updatePlayer } from "@/lib/db/data";
 import { redirectPath } from "@/lib/strings";
 
 const DATA_DIR = process.env.DATABASE_PATH
@@ -19,6 +19,24 @@ const ALLOWED_TYPES: Record<string, string> = {
 };
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+
+export async function updateNameAction(formData: FormData) {
+  const { user } = await requireUser();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) redirect(redirectPath("/profile", "error", "Ange ett namn."));
+
+  try {
+    updatePlayer(user.id, name);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "";
+    if (msg.includes("UNIQUE constraint failed")) {
+      redirect(redirectPath("/profile", "error", `Namnet "${name}" är redan taget.`));
+    }
+    throw e;
+  }
+
+  redirect(redirectPath("/profile", "message", "Namnet uppdaterat!"));
+}
 
 export async function uploadAvatarAction(formData: FormData) {
   const { user } = await requireUser();

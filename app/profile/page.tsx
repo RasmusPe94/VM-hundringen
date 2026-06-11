@@ -2,7 +2,7 @@ import { MessageBanner } from "@/components/message-banner";
 import { PageHeader } from "@/components/page-header";
 import { SubmitButton } from "@/components/submit-button";
 import { requireUser } from "@/lib/auth";
-import { uploadAvatarAction, removeAvatarAction } from "./actions";
+import { uploadAvatarAction, removeAvatarAction, updateNameAction } from "./actions";
 
 type ProfilePageProps = {
   searchParams?: Record<string, string | string[] | undefined>;
@@ -14,9 +14,25 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   return (
     <div className="mx-auto max-w-md space-y-6">
-      <PageHeader title="Min profil" description="Byt din profilbild." />
+      <PageHeader title="Min profil" description="Byt namn eller profilbild." />
       <MessageBanner searchParams={searchParams} />
 
+      {/* Change name */}
+      <div className="rounded-lg border border-border bg-surface p-6 shadow-card space-y-4">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted">Byt namn</p>
+        <form action={updateNameAction} className="flex gap-3">
+          <input
+            className="focus-ring flex-1 rounded-md border border-border bg-rim px-3 py-2 text-bright"
+            defaultValue={user.name}
+            name="name"
+            required
+            type="text"
+          />
+          <SubmitButton pendingText="Sparar...">Spara</SubmitButton>
+        </form>
+      </div>
+
+      {/* Avatar */}
       <div className="rounded-lg border border-border bg-surface p-6 shadow-card space-y-6">
         {/* Current avatar */}
         <div className="flex flex-col items-center gap-3">
