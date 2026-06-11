@@ -12,7 +12,8 @@ const numberFormatter = new Intl.NumberFormat("sv-SE", {
 
 const dateFormatter = new Intl.DateTimeFormat("sv-SE", {
   dateStyle: "medium",
-  timeStyle: "short"
+  timeStyle: "short",
+  timeZone: "Europe/Stockholm",
 });
 
 export function toNumber(value: number | string | null | undefined) {
