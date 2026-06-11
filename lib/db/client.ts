@@ -63,4 +63,11 @@ function migrate(db: Database.Database) {
     CREATE UNIQUE INDEX IF NOT EXISTS ux_players_name
     ON players (name COLLATE NOCASE);
   `);
+
+  // Migration: avatar support
+  try {
+    db.exec(`ALTER TABLE players ADD COLUMN avatar_ext TEXT`);
+  } catch {
+    // Column already exists – ignore
+  }
 }

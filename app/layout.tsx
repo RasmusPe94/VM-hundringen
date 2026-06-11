@@ -19,6 +19,7 @@ const navItems = [
   { href: "/bets",        label: "Alla spel" },
   { href: "/my-bets",     label: "Mina spel" },
   { href: "/bets/new",    label: "+ Nytt spel" },
+  { href: "/profile",     label: "Min profil" },
   { href: "/rules",       label: "Regler" }
 ];
 

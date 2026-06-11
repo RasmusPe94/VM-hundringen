@@ -7,6 +7,7 @@ export type BetStatus = "pending" | "won" | "lost" | "void";
 export type PlayerRecord = {
   id: string;
   name: string;
+  avatar_ext: string | null;
   created_at: string;
 };
 
@@ -50,6 +51,7 @@ export type LeaderboardRow = {
   rank: number;
   player_id: string;
   display_name: string;
+  avatar_ext: string | null;
   total_staked: number;
   current_balance: number;
   pending_stake: number;
@@ -100,6 +102,10 @@ export function createPlayer(name: string): PlayerRecord {
 
 export function updatePlayer(id: string, name: string): void {
   getDb().prepare("UPDATE players SET name = ? WHERE id = ?").run(name, id);
+}
+
+export function setPlayerAvatar(id: string, ext: string | null): void {
+  getDb().prepare("UPDATE players SET avatar_ext = ? WHERE id = ?").run(ext, id);
 }
 
 export function deletePlayer(id: string): void {
@@ -272,6 +278,7 @@ export function getLeaderboardRows(): LeaderboardRow[] {
       const balanceIncludingPossiblePayout = money(currentBalance + potentialPayout);
 
       return {
+        avatar_ext: player.avatar_ext,
         balance_including_possible_payout: balanceIncludingPossiblePayout,
         bet_count: playerBets.length,
         current_balance: currentBalance,

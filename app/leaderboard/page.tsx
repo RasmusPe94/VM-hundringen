@@ -7,6 +7,35 @@ import { getLeaderboardRows } from "@/lib/db/data";
 
 const medalClass = ["rank-1", "rank-2", "rank-3"];
 
+function Avatar({ playerId, avatarExt, name, size = 32 }: {
+  playerId: string;
+  avatarExt: string | null;
+  name: string;
+  size?: number;
+}) {
+  if (avatarExt) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={`/api/avatar/${playerId}`}
+        alt={name}
+        width={size}
+        height={size}
+        className="rounded-full object-cover ring-1 ring-border shrink-0"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
+  return (
+    <div
+      className="flex items-center justify-center rounded-full bg-rim ring-1 ring-border shrink-0 font-bold text-muted"
+      style={{ width: size, height: size, fontSize: size * 0.4 }}
+    >
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 export default async function LeaderboardPage() {
   await requireUser();
   const rows = getLeaderboardRows();
@@ -35,6 +64,7 @@ export default async function LeaderboardPage() {
                     <span className={`text-xl ${medalClass[row.rank - 1] ?? "text-muted"}`}>
                       {row.rank === 1 ? "🥇" : row.rank === 2 ? "🥈" : row.rank === 3 ? "🥉" : `#${row.rank}`}
                     </span>
+                    <Avatar playerId={row.player_id} avatarExt={row.avatar_ext} name={row.display_name} size={36} />
                     <span className="font-bold text-bright">{row.display_name}</span>
                   </div>
                   <span className="text-lg font-black text-foam">{formatCurrency(row.current_balance)}</span>
@@ -92,7 +122,12 @@ export default async function LeaderboardPage() {
                     <td className={`px-4 py-3 text-base ${medalClass[row.rank - 1] ?? "text-muted"}`}>
                       {row.rank === 1 ? "🥇" : row.rank === 2 ? "🥈" : row.rank === 3 ? "🥉" : row.rank}
                     </td>
-                    <td className="px-4 py-3 font-bold text-bright">{row.display_name}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <Avatar playerId={row.player_id} avatarExt={row.avatar_ext} name={row.display_name} size={28} />
+                        <span className="font-bold text-bright">{row.display_name}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-muted">{formatCurrency(row.total_staked)}</td>
                     <td className="px-4 py-3 font-bold text-foam">{formatCurrency(row.current_balance)}</td>
                     <td className="px-4 py-3 text-muted">{formatCurrency(row.pending_stake)}</td>
