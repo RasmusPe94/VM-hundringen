@@ -4,6 +4,8 @@ import "./globals.css";
 import { getUserProfile } from "@/lib/auth";
 import { getIsAdmin } from "@/lib/cookies";
 import { adminSignOutAction, signOutAction } from "@/lib/actions";
+import { MobileNav } from "@/components/mobile-nav";
+
 
 export const metadata: Metadata = {
   title: "VM-hundringen 2026 🏆",
@@ -39,19 +41,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {/* Gold top stripe */}
             <div className="h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60" />
             <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between py-3 gap-4">
+              <div className="relative flex items-center justify-between py-3 gap-4">
                 {/* Logo */}
                 <Link href={user ? "/leaderboard" : "/login"} className="focus-ring rounded-sm shrink-0">
-                  <span className="text-xl font-black tracking-tight logo-text">
+                  <span className="text-lg font-black tracking-tight logo-text sm:text-xl">
                     VM-hundringen 2026 🏆
                   </span>
                 </Link>
 
-                {/* Right side actions */}
-                <div className="flex items-center gap-2 text-sm">
+                {/* Desktop: right side actions */}
+                <div className="hidden md:flex items-center gap-2 text-sm">
                   {user ? (
                     <>
-                      <span className="hidden sm:inline-block rounded-md bg-rim border border-border px-3 py-1.5 text-sm font-medium text-body">
+                      <span className="rounded-md bg-rim border border-border px-3 py-1.5 text-sm font-medium text-body">
                         👤 {profile?.display_name}
                       </span>
                       <form action={signOutAction}>
@@ -77,11 +79,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     </form>
                   )}
                 </div>
+
+                {/* Mobile: hamburger */}
+                {(user || isAdmin) && (
+                  <MobileNav
+                    navItems={user ? navItems : []}
+                    adminItems={isAdmin ? adminItems : []}
+                    isAdmin={isAdmin}
+                    playerName={profile?.display_name ?? null}
+                    showUser={!!user}
+                  />
+                )}
               </div>
 
-              {/* Nav */}
+              {/* Desktop nav */}
               {(user || isAdmin) ? (
-                <nav className="flex flex-wrap gap-1 pb-2 text-sm font-medium">
+                <nav className="hidden md:flex flex-wrap gap-1 pb-2 text-sm font-medium">
                   {user ? navItems.map((item) => (
                     <Link
                       key={item.href}
@@ -111,13 +124,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </header>
 
           {/* ── Main ───────────────────────────────────────────────────── */}
-          <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+          <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             {children}
           </main>
 
           {/* ── Footer ─────────────────────────────────────────────────── */}
           <footer className="border-t border-border py-4 text-center text-xs text-muted">
-            VM 1000 2026 · Privat bettingtävling 🍺
+            VM-hundringen 2026 · Privat bettingtävling 🍺
           </footer>
         </div>
       </body>
