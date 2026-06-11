@@ -33,7 +33,6 @@ RUN apt-get update && apt-get install -y \
 # Create data directory for SQLite volume
 RUN mkdir -p /data
 
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
