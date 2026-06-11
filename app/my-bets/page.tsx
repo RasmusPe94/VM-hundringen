@@ -110,15 +110,15 @@ function EditForm({
             type="number"
           />
         </div>
-        <div className="flex items-center gap-3 md:col-span-2">
+        <div className="md:col-span-2">
           <SubmitButton pendingText="Uppdaterar...">Spara ändringar</SubmitButton>
-          <form action={deleteAction}>
-            <input name="id" type="hidden" value={bet.id} />
-            <SubmitButton variant="danger" pendingText="Tar bort...">
-              Ta bort
-            </SubmitButton>
-          </form>
         </div>
+      </form>
+      <form action={deleteAction} className="mt-3">
+        <input name="id" type="hidden" value={bet.id} />
+        <SubmitButton variant="danger" pendingText="Tar bort...">
+          Ta bort
+        </SubmitButton>
       </form>
     </div>
   );
