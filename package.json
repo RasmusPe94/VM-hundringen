@@ -7,10 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "pocketbase:migrate": "./bin/pocketbase migrate up --dir pb_data --migrationsDir pb_migrations --hooksDir pb_hooks",
-    "pocketbase:serve": "./bin/pocketbase serve --http=127.0.0.1:8090 --dir pb_data --migrationsDir pb_migrations --hooksDir pb_hooks",
-    "pocketbase:superuser": "./bin/pocketbase superuser upsert --dir pb_data --migrationsDir pb_migrations --hooksDir pb_hooks",
-    "typecheck": "tsc --noEmit",
+"typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
