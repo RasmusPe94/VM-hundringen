@@ -1,5 +1,9 @@
 .next
 node_modules
+data/*.db
 .env*.local
 coverage
 *.tsbuildinfo
+bin/pocketbase
+pb_data
+pb_public

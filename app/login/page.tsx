@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { MessageBanner } from "@/components/message-banner";
-import { PageHeader } from "@/components/page-header";
 import { SubmitButton } from "@/components/submit-button";
 import { getUserProfile } from "@/lib/auth";
-import { signInAction } from "./actions";
+import { listPlayers } from "@/lib/db/data";
+import type { PlayerRecord } from "@/lib/db/data";
+import { addUserAction, selectUserAction } from "./actions";
 
 type LoginPageProps = {
   searchParams?: Record<string, string | string[] | undefined>;
@@ -11,56 +12,57 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { user } = await getUserProfile();
+  if (user) redirect("/leaderboard");
 
-  if (user) {
-    redirect("/leaderboard");
-  }
+  let players: PlayerRecord[] = [];
+  try { players = listPlayers(); } catch { /* db not ready yet */ }
 
   return (
-    <div className="mx-auto max-w-md space-y-6">
-      <PageHeader
-        description="Logga in med användarnamn och lösenord. Ingen e-post behövs."
-        title="Logga in"
-      />
+    <div className="mx-auto max-w-md space-y-6 py-4">
+      {/* Hero */}
+      <div className="text-center space-y-2 pb-2">
+        <div className="text-6xl">⚽</div>
+        <h1 className="text-3xl font-black tracking-tight logo-text">VM-hundringen 2026 🏆</h1>
+        <p className="text-muted text-sm">Välj vem du är för att komma in i tävlingen.</p>
+      </div>
+
       <MessageBanner searchParams={searchParams} />
-      <form
-        action={signInAction}
-        className="space-y-4 rounded-md border border-neutral-200 bg-white p-5 shadow-soft"
-      >
-        <div className="space-y-2">
-          <label
-            className="text-sm font-semibold text-neutral-800"
-            htmlFor="username"
-          >
-            Användare
-          </label>
+
+      {players.length > 0 ? (
+        <form action={selectUserAction} className="space-y-3 rounded-lg border border-border bg-surface p-5 shadow-card">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted">Välj spelare</p>
+          <div className="space-y-2">
+            {players.map((p) => (
+              <label
+                key={p.id}
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-border px-4 py-3 transition hover:border-turf/60 hover:bg-rim has-[:checked]:border-turf has-[:checked]:bg-turf/10"
+              >
+                <input className="accent-turf" name="user_id" type="radio" value={p.id} />
+                <span className="font-semibold text-bright">{p.name}</span>
+              </label>
+            ))}
+          </div>
+          <SubmitButton pendingText="Väljer..." className="w-full">Välj och fortsätt</SubmitButton>
+        </form>
+      ) : null}
+
+      <form action={addUserAction} className="space-y-3 rounded-lg border border-border bg-surface p-5 shadow-card">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted">Ny spelare 🍺</p>
+        <div className="space-y-1.5">
+          <label className="text-sm font-semibold text-body" htmlFor="display_name">Ditt namn</label>
           <input
-            autoComplete="username"
-            className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
-            id="username"
-            name="username"
-            placeholder="till exempel kalle"
+            autoComplete="off"
+            className="focus-ring w-full rounded-lg border border-border bg-rim px-3 py-2 text-bright placeholder:text-muted"
+            id="display_name"
+            name="display_name"
+            placeholder="t.ex. Rasmus"
             required
             type="text"
           />
         </div>
-        <div className="space-y-2">
-          <label
-            className="text-sm font-semibold text-neutral-800"
-            htmlFor="password"
-          >
-            Lösenord
-          </label>
-          <input
-            autoComplete="current-password"
-            className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
-            id="password"
-            name="password"
-            required
-            type="password"
-          />
-        </div>
-        <SubmitButton pendingText="Loggar in...">Logga in</SubmitButton>
+        <SubmitButton pendingText="Lägger till..." variant="secondary" className="w-full">
+          Lägg till och välj
+        </SubmitButton>
       </form>
     </div>
   );

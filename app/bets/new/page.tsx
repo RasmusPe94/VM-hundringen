@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { SubmitButton } from "@/components/submit-button";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
-import { getCurrentBalance, listMatches } from "@/lib/pocketbase/data";
+import { getCurrentBalance, listMatches } from "@/lib/db/data";
 import { createBetAction } from "./actions";
 
 type NewBetPageProps = {
@@ -26,14 +26,14 @@ export default async function NewBetPage({ searchParams }: NewBetPageProps) {
       <MessageBanner searchParams={searchParams} />
       <form
         action={createBetAction}
-        className="space-y-5 rounded-md border border-neutral-200 bg-white p-5 shadow-soft"
+        className="space-y-5 rounded-lg border border-border bg-surface p-5 shadow-card"
       >
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-neutral-800" htmlFor="match_id">
+          <label className="text-sm font-semibold text-bright" htmlFor="match_id">
             Match
           </label>
           <select
-            className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
+            className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
             id="match_id"
             name="match_id"
           >
@@ -48,13 +48,13 @@ export default async function NewBetPage({ searchParams }: NewBetPageProps) {
         </div>
         <div className="space-y-2">
           <label
-            className="text-sm font-semibold text-neutral-800"
+            className="text-sm font-semibold text-bright"
             htmlFor="match_label"
           >
             Fritextmatch
           </label>
           <input
-            className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
+            className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
             id="match_label"
             name="match_label"
             placeholder="Till exempel: Finalen eller Sverige v Danmark"
@@ -63,13 +63,13 @@ export default async function NewBetPage({ searchParams }: NewBetPageProps) {
         </div>
         <div className="space-y-2">
           <label
-            className="text-sm font-semibold text-neutral-800"
+            className="text-sm font-semibold text-bright"
             htmlFor="description"
           >
             Beskrivning
           </label>
           <textarea
-            className="focus-ring min-h-24 w-full rounded-md border border-neutral-300 px-3 py-2"
+            className="focus-ring min-h-24 w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
             id="description"
             name="description"
             placeholder="Till exempel: Argentina vinner efter ordinarie tid"
@@ -78,11 +78,11 @@ export default async function NewBetPage({ searchParams }: NewBetPageProps) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-neutral-800" htmlFor="odds">
+            <label className="text-sm font-semibold text-bright" htmlFor="odds">
               Odds
             </label>
             <input
-              className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
+              className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
               id="odds"
               min="1.01"
               name="odds"
@@ -92,11 +92,11 @@ export default async function NewBetPage({ searchParams }: NewBetPageProps) {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-neutral-800" htmlFor="stake">
+            <label className="text-sm font-semibold text-bright" htmlFor="stake">
               Insats
             </label>
             <input
-              className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
+              className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
               id="stake"
               min="0.01"
               name="stake"

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { SubmitButton } from "@/components/submit-button";
 import { money } from "@/lib/format";
-import { settleBetAction } from "./actions";
+import { settleMyBetAction } from "./actions";
 
 type SettleFormProps = {
   betId: string;
@@ -14,7 +14,7 @@ type SettleFormProps = {
 export function SettleForm({ betId, stake, odds }: SettleFormProps) {
   const defaults = useMemo(
     () => ({
-      won: money(stake * odds),
+      won:  money(stake * odds),
       lost: 0,
       void: money(stake)
     }),
@@ -24,20 +24,20 @@ export function SettleForm({ betId, stake, odds }: SettleFormProps) {
   const [payout, setPayout] = useState(defaults.won.toFixed(2));
 
   return (
-    <form action={settleBetAction} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+    <form action={settleMyBetAction} className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
       <input name="id" type="hidden" value={betId} />
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-bright" htmlFor={`status_${betId}`}>
-          Status
+        <label className="text-sm font-semibold text-foam" htmlFor={`status_${betId}`}>
+          Resultat
         </label>
         <select
           className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
           id={`status_${betId}`}
           name="status"
-          onChange={(event) => {
-            const nextStatus = event.target.value as "won" | "lost" | "void";
-            setStatus(nextStatus);
-            setPayout(defaults[nextStatus].toFixed(2));
+          onChange={(e) => {
+            const next = e.target.value as "won" | "lost" | "void";
+            setStatus(next);
+            setPayout(defaults[next].toFixed(2));
           }}
           value={status}
         >
@@ -47,15 +47,15 @@ export function SettleForm({ betId, stake, odds }: SettleFormProps) {
         </select>
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-bright" htmlFor={`payout_${betId}`}>
-          Vinst
+        <label className="text-sm font-semibold text-foam" htmlFor={`payout_${betId}`}>
+          Vinst (kr)
         </label>
         <input
           className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
           id={`payout_${betId}`}
           min="0"
           name="payout"
-          onChange={(event) => setPayout(event.target.value)}
+          onChange={(e) => setPayout(e.target.value)}
           step="0.01"
           type="number"
           value={payout}
@@ -63,7 +63,7 @@ export function SettleForm({ betId, stake, odds }: SettleFormProps) {
       </div>
       <div className="flex items-end">
         <SubmitButton className="w-full" pendingText="Avgör...">
-          Spara
+          Avgör
         </SubmitButton>
       </div>
     </form>

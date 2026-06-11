@@ -1,81 +1,44 @@
 import { redirect } from "next/navigation";
-import { hasPocketBaseEnv } from "@/lib/env";
-import { getAuthToken } from "@/lib/pocketbase/client";
-import { refreshUserAuth } from "@/lib/pocketbase/data";
+import { getIsAdmin, getSelectedUserId } from "@/lib/cookies";
+import { listPlayers } from "@/lib/db/data";
 
 export type Profile = {
   id: string;
   display_name: string;
-  role: "player" | "admin";
-  starting_bankroll: number | string;
 };
 
 export async function getUserProfile() {
-  if (!hasPocketBaseEnv()) {
-    return {
-      user: null,
-      profile: null,
-      pocketBaseConfigured: false
-    };
-  }
+  const userId = getSelectedUserId();
 
-  const token = getAuthToken();
-
-  if (!token) {
-    return {
-      user: null,
-      profile: null,
-      pocketBaseConfigured: true
-    };
+  if (!userId) {
+    return { user: null, profile: null };
   }
 
   try {
-    const { record } = await refreshUserAuth(token);
-    const profile = {
-      display_name: record.display_name || record.username,
-      id: record.id,
-      role: record.role,
-      starting_bankroll: record.starting_bankroll
-    } satisfies Profile;
+    const players = listPlayers();
+    const player = players.find((p) => p.id === userId) ?? null;
+
+    if (!player) return { user: null, profile: null };
 
     return {
-      user: record,
-      profile,
-      pocketBaseConfigured: true
+      user: player,
+      profile: { id: player.id, display_name: player.name }
     };
   } catch {
-    return {
-      user: null,
-      profile: null,
-      pocketBaseConfigured: true
-    };
+    return { user: null, profile: null };
   }
 }
 
 export async function requireUser() {
   const session = await getUserProfile();
 
-  if (!session.pocketBaseConfigured) {
-    redirect("/login?error=PocketBase-miljovariabel saknas.");
-  }
+  if (!session.user) redirect("/login");
 
-  if (!session.user) {
-    redirect("/login");
-  }
-
-  return {
-    user: session.user,
-    profile: session.profile,
-    pocketBaseConfigured: true
-  };
+  return session;
 }
 
 export async function requireAdmin() {
-  const session = await requireUser();
+  if (!getIsAdmin()) redirect("/admin/login");
 
-  if (session.profile?.role !== "admin") {
-    redirect("/leaderboard");
-  }
-
-  return session;
+  return {};
 }

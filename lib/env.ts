@@ -11,3 +11,7 @@ export function getPocketBaseEnv() {
 
   return { url: url.replace(/\/$/, "") };
 }
+
+export function getPocketBaseAdminToken() {
+  return process.env.POCKETBASE_ADMIN_TOKEN ?? null;
+}

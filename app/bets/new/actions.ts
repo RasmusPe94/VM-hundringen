@@ -7,7 +7,7 @@ import {
   createBet,
   getCompetitionSettings,
   getCurrentBalance
-} from "@/lib/pocketbase/data";
+} from "@/lib/db/data";
 import { redirectPath } from "@/lib/strings";
 import { betInputSchema, formError } from "@/lib/validation";
 
@@ -31,7 +31,7 @@ export async function createBetAction(formData: FormData) {
     redirect(redirectPath("/bets/new", "error", "Tävlingen är låst."));
   }
 
-  const currentBalance = toNumber(await getCurrentBalance(user.id));
+  const currentBalance = toNumber(await getCurrentBalance(user!.id));
   const stake = money(parsed.data.stake);
 
   if (stake > currentBalance) {
@@ -45,7 +45,7 @@ export async function createBetAction(formData: FormData) {
   }
 
   try {
-    await createBet(user.id, {
+    await createBet(user!.id, {
       description: parsed.data.description,
       match_id: parsed.data.match_id,
       match_label: parsed.data.match_label,

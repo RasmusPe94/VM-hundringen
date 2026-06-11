@@ -3,7 +3,7 @@ import { MessageBanner } from "@/components/message-banner";
 import { PageHeader } from "@/components/page-header";
 import { formatCurrency, formatDate, formatDecimal, toNumber } from "@/lib/format";
 import { requireAdmin } from "@/lib/auth";
-import { listPendingBets } from "@/lib/pocketbase/data";
+import { listPendingBets } from "@/lib/db/data";
 import { SettleForm } from "./settle-form";
 
 type BetRow = {
@@ -52,25 +52,25 @@ export default async function AdminSettlePage({
         <div className="space-y-4">
           {bets.map((bet) => (
             <section
-              className="rounded-md border border-neutral-200 bg-white p-4 shadow-soft"
+              className="rounded-lg border border-border bg-surface p-4 shadow-card"
               key={bet.id}
             >
-              <div className="mb-4 grid gap-3 border-b border-neutral-100 pb-4 md:grid-cols-[1fr_auto]">
+              <div className="mb-4 grid gap-3 border-b border-border pb-4 md:grid-cols-[1fr_auto]">
                 <div>
-                  <h2 className="text-base font-bold text-ink">{matchName(bet)}</h2>
-                  <p className="mt-1 text-sm text-neutral-700">{bet.description}</p>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <h2 className="text-base font-bold text-bright">{matchName(bet)}</h2>
+                  <p className="mt-1 text-sm text-body">{bet.description}</p>
+                  <p className="mt-1 text-xs text-muted">
                     {bet.profiles?.display_name ?? "Okänd"} ·{" "}
                     {formatDate(bet.created_at)}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-xs uppercase text-neutral-500">Odds</p>
+                    <p className="text-xs uppercase text-muted">Odds</p>
                     <p className="font-semibold">{formatDecimal(bet.odds)}</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase text-neutral-500">Insats</p>
+                    <p className="text-xs uppercase text-muted">Insats</p>
                     <p className="font-semibold">{formatCurrency(bet.stake)}</p>
                   </div>
                 </div>

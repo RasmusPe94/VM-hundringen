@@ -3,12 +3,12 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { money, toNumber } from "@/lib/format";
-import { getPendingBet, settleBet } from "@/lib/pocketbase/data";
+import { getPendingBet, settleBet } from "@/lib/db/data";
 import { redirectPath } from "@/lib/strings";
 import { formError, settleInputSchema } from "@/lib/validation";
 
 export async function settleBetAction(formData: FormData) {
-  const { user } = await requireAdmin();
+  await requireAdmin();
   const parsed = settleInputSchema.safeParse({
     id: formData.get("id"),
     status: formData.get("status"),
@@ -35,7 +35,7 @@ export async function settleBetAction(formData: FormData) {
   const payout = money(parsed.data.payout ?? defaultPayouts[parsed.data.status]);
 
   try {
-    await settleBet(parsed.data.id, parsed.data.status, payout, user.id);
+    await settleBet(parsed.data.id, parsed.data.status, payout);
   } catch (error) {
     redirect(
       redirectPath(

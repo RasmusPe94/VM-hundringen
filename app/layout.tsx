@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 import { getUserProfile } from "@/lib/auth";
-import { signOutAction } from "@/lib/actions";
+import { getIsAdmin } from "@/lib/cookies";
+import { adminSignOutAction, signOutAction } from "@/lib/actions";
 
 export const metadata: Metadata = {
-  title: "VM 1000 2026",
+  title: "VM-hundringen 2026 🏆",
   description: "Privat bettingtävling för fotbolls-VM 2026"
 };
 
@@ -13,97 +14,111 @@ export const dynamic = "force-dynamic";
 
 const navItems = [
   { href: "/leaderboard", label: "Topplista" },
-  { href: "/bets", label: "Alla spel" },
-  { href: "/my-bets", label: "Mina spel" },
-  { href: "/bets/new", label: "Nytt spel" },
-  { href: "/rules", label: "Regler" }
+  { href: "/bets",        label: "Alla spel" },
+  { href: "/my-bets",     label: "Mina spel" },
+  { href: "/bets/new",    label: "+ Nytt spel" },
+  { href: "/rules",       label: "Regler" }
 ];
 
 const adminItems = [
+  { href: "/admin/bets",    label: "Spel" },
   { href: "/admin/matches", label: "Matcher" },
-  { href: "/admin/settle", label: "Avgör spel" }
+  { href: "/admin/users",   label: "Spelare" }
 ];
 
-export default async function RootLayout({
-  children
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const { user, profile, pocketBaseConfigured } = await getUserProfile();
-  const isAdmin = profile?.role === "admin";
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { user, profile } = await getUserProfile();
+  const isAdmin = getIsAdmin();
 
   return (
     <html lang="sv">
-      <body>
-        <div className="min-h-screen">
-          <header className="border-b border-neutral-200 bg-white">
-            <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <Link
-                  className="focus-ring rounded-sm text-xl font-black tracking-normal text-ink"
-                  href={user ? "/leaderboard" : "/login"}
-                >
-                  VM 1000 2026
+      <body className="pitch-watermark">
+        <div className="min-h-screen flex flex-col">
+          {/* ── Header ─────────────────────────────────────────────────── */}
+          <header className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
+            {/* Gold top stripe */}
+            <div className="h-0.5 bg-gradient-to-r from-transparent via-gold to-transparent opacity-60" />
+            <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between py-3 gap-4">
+                {/* Logo */}
+                <Link href={user ? "/leaderboard" : "/login"} className="focus-ring rounded-sm shrink-0">
+                  <span className="text-xl font-black tracking-tight logo-text">
+                    VM-hundringen 2026 🏆
+                  </span>
                 </Link>
-                <div className="flex flex-wrap items-center gap-2 text-sm">
+
+                {/* Right side actions */}
+                <div className="flex items-center gap-2 text-sm">
                   {user ? (
                     <>
-                      <span className="rounded-md bg-paper px-3 py-2 font-medium text-neutral-700">
-                        {profile?.display_name ?? user.username}
+                      <span className="hidden sm:inline-block rounded-md bg-rim border border-border px-3 py-1.5 text-sm font-medium text-body">
+                        👤 {profile?.display_name}
                       </span>
                       <form action={signOutAction}>
-                        <button
-                          className="focus-ring rounded-md border border-neutral-300 px-3 py-2 font-semibold text-neutral-700 transition hover:bg-neutral-100"
-                          type="submit"
-                        >
-                          Logga ut
+                        <button className="focus-ring rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-muted transition hover:border-gold/50 hover:text-gold">
+                          Byt spelare
                         </button>
                       </form>
                     </>
                   ) : (
-                    <Link
-                      className="focus-ring rounded-md bg-grass px-3 py-2 font-semibold text-white transition hover:bg-[#11633c]"
-                      href="/login"
-                    >
-                      Logga in
+                    <Link href="/login" className="focus-ring rounded-md bg-turf px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-turf2">
+                      Välj spelare
                     </Link>
+                  )}
+                  {!isAdmin ? (
+                    <Link href="/admin/login" className="focus-ring rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-muted transition hover:border-border hover:text-body">
+                      Admin
+                    </Link>
+                  ) : (
+                    <form action={adminSignOutAction}>
+                      <button className="focus-ring rounded-md bg-gold/10 border border-gold/30 px-3 py-1.5 text-xs font-semibold text-gold transition hover:bg-gold/20">
+                        🔑 Logga ut admin
+                      </button>
+                    </form>
                   )}
                 </div>
               </div>
-              {user ? (
-                <nav className="flex flex-wrap gap-2 text-sm font-semibold text-neutral-700">
-                  {navItems.map((item) => (
+
+              {/* Nav */}
+              {(user || isAdmin) ? (
+                <nav className="flex flex-wrap gap-1 pb-2 text-sm font-medium">
+                  {user ? navItems.map((item) => (
                     <Link
-                      className="focus-ring rounded-md px-3 py-2 transition hover:bg-paper"
-                      href={item.href}
                       key={item.href}
+                      href={item.href}
+                      className="focus-ring rounded-md px-3 py-1.5 text-muted transition hover:bg-rim hover:text-body"
                     >
                       {item.label}
                     </Link>
-                  ))}
-                  {isAdmin
-                    ? adminItems.map((item) => (
+                  )) : null}
+                  {isAdmin ? (
+                    <>
+                      <span className="mx-1 self-center text-border">|</span>
+                      {adminItems.map((item) => (
                         <Link
-                          className="focus-ring rounded-md px-3 py-2 text-clay transition hover:bg-paper"
-                          href={item.href}
                           key={item.href}
+                          href={item.href}
+                          className="focus-ring rounded-md px-3 py-1.5 text-gold/70 transition hover:bg-gold/10 hover:text-gold"
                         >
                           {item.label}
                         </Link>
-                      ))
-                    : null}
+                      ))}
+                    </>
+                  ) : null}
                 </nav>
               ) : null}
             </div>
           </header>
-          {!pocketBaseConfigured ? (
-            <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              Lägg till POCKETBASE_URL för att aktivera inloggning och data.
-            </div>
-          ) : null}
-          <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+
+          {/* ── Main ───────────────────────────────────────────────────── */}
+          <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
             {children}
           </main>
+
+          {/* ── Footer ─────────────────────────────────────────────────── */}
+          <footer className="border-t border-border py-4 text-center text-xs text-muted">
+            VM 1000 2026 · Privat bettingtävling 🍺
+          </footer>
         </div>
       </body>
     </html>

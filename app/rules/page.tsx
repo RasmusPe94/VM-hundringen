@@ -7,8 +7,8 @@ export default function RulesPage() {
         description="Reglerna är skrivna för att matcha den gamla Excel/Google Sheets-modellen."
         title="Regler"
       />
-      <section className="space-y-4 rounded-md border border-neutral-200 bg-white p-5 text-sm leading-7 shadow-soft">
-        <h2 className="text-lg font-bold text-ink">VM 1000 2026</h2>
+      <section className="space-y-4 rounded-md border border-border bg-surface p-5 text-sm leading-7 shadow-soft">
+        <h2 className="text-lg font-bold text-bright">VM 1000 2026</h2>
         <p>
           Varje deltagare startar med 100 SEK. Alla spel läggs i appen och är
           synliga för alla deltagare i tävlingen.

@@ -1,9 +1,14 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { clearAuthToken } from "@/lib/pocketbase/client";
+import { clearIsAdmin, clearSelectedUserId } from "@/lib/cookies";
 
 export async function signOutAction() {
-  clearAuthToken();
+  clearSelectedUserId();
   redirect("/login");
+}
+
+export async function adminSignOutAction() {
+  clearIsAdmin();
+  redirect("/");
 }

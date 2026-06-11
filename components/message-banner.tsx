@@ -5,23 +5,21 @@ type MessageBannerProps = {
 };
 
 export function MessageBanner({ searchParams }: MessageBannerProps) {
-  const error = getParam(searchParams?.error);
+  const error   = getParam(searchParams?.error);
   const message = getParam(searchParams?.message);
 
-  if (!error && !message) {
-    return null;
-  }
+  if (!error && !message) return null;
 
   return (
     <div
-      className={`rounded-md border px-4 py-3 text-sm ${
+      className={`rounded-lg border px-4 py-3 text-sm font-medium ${
         error
-          ? "border-red-200 bg-red-50 text-red-800"
-          : "border-emerald-200 bg-emerald-50 text-emerald-800"
+          ? "border-red-800/50 bg-red-900/20 text-red-300"
+          : "border-emerald-700/50 bg-emerald-900/20 text-emerald-300"
       }`}
       role="status"
     >
-      {error || message}
+      {error ? "⚠️ " : "✅ "}{error || message}
     </div>
   );
 }

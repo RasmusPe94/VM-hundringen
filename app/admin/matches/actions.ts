@@ -7,7 +7,7 @@ import {
   deleteMatch,
   setCompetitionLocked,
   updateMatch
-} from "@/lib/pocketbase/data";
+} from "@/lib/db/data";
 import { redirectPath } from "@/lib/strings";
 import { formError, matchInputSchema } from "@/lib/validation";
 
@@ -108,10 +108,10 @@ export async function deleteMatchAction(formData: FormData) {
 }
 
 export async function updateCompetitionLockAction(formData: FormData) {
-  const { user } = await requireAdmin();
+  await requireAdmin();
   const locked = formData.get("locked") === "on";
   try {
-    await setCompetitionLocked(locked, user.id);
+    await setCompetitionLocked(locked);
   } catch (error) {
     redirect(
       redirectPath(

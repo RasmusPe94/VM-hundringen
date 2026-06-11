@@ -1,55 +1,14 @@
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { StatusPill } from "@/components/status-pill";
-import {
-  formatCurrency,
-  formatDate,
-  formatDecimal,
-  formatStatus
-} from "@/lib/format";
+import { formatCurrency, formatDate, formatDecimal, formatStatus } from "@/lib/format";
 import { requireUser } from "@/lib/auth";
-import { listBets, listUsers } from "@/lib/pocketbase/data";
+import { listBets, listPlayers } from "@/lib/db/data";
 import { getParam } from "@/lib/strings";
-
-type ProfileOption = {
-  id: string;
-  display_name: string;
-};
-
-type MatchRef = {
-  match_no: number;
-  starts_at: string | null;
-  home_team: string;
-  away_team: string;
-  phase: string | null;
-};
-
-type BetRow = {
-  id: string;
-  user_id: string;
-  match_label: string | null;
-  description: string;
-  odds: number | string;
-  stake: number | string;
-  status: string;
-  payout: number | string | null;
-  created_at: string;
-  settled_at: string | null;
-  profiles: ProfileOption | null;
-  matches: MatchRef | null;
-};
 
 type BetsPageProps = {
   searchParams?: Record<string, string | string[] | undefined>;
 };
-
-function matchName(bet: BetRow) {
-  if (bet.matches) {
-    return `#${bet.matches.match_no} ${bet.matches.home_team} - ${bet.matches.away_team}`;
-  }
-
-  return bet.match_label ?? "Fritext";
-}
 
 export default async function BetsPage({ searchParams }: BetsPageProps) {
   await requireUser();
@@ -57,13 +16,15 @@ export default async function BetsPage({ searchParams }: BetsPageProps) {
   const status = getParam(searchParams?.status);
   const match = getParam(searchParams?.match).trim().toLowerCase();
 
-  const [profiles, allBets] = await Promise.all([listUsers(), listBets()]);
-  const bets = (allBets as BetRow[]).filter((bet) => {
-    const playerMatches = !player || bet.user_id === player;
-    const statusMatches = !status || bet.status === status;
-    const matchText = `${matchName(bet)} ${bet.match_label ?? ""}`.toLowerCase();
-    const matchMatches = !match || matchText.includes(match);
+  const [players, allBets] = await Promise.all([listPlayers(), listBets()]);
 
+  const bets = allBets.filter((bet) => {
+    const playerMatches = !player || bet.player_id === player;
+    const statusMatches = !status || bet.status === status;
+    const matchText = bet.matches
+      ? `#${bet.matches.match_no} ${bet.matches.home_team} - ${bet.matches.away_team} ${bet.match_label ?? ""}`.toLowerCase()
+      : (bet.match_label ?? "").toLowerCase();
+    const matchMatches = !match || matchText.includes(match);
     return playerMatches && statusMatches && matchMatches;
   });
 
@@ -73,49 +34,29 @@ export default async function BetsPage({ searchParams }: BetsPageProps) {
         description="Alla deltagare kan se alla spel. Filtrera på spelare, status eller match."
         title="Alla spel"
       />
-      <form className="grid gap-4 rounded-md border border-neutral-200 bg-white p-4 shadow-soft md:grid-cols-4">
+      <form className="grid gap-4 rounded-lg border border-border bg-surface p-4 shadow-card md:grid-cols-4">
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-neutral-800" htmlFor="player">
-            Spelare
-          </label>
-          <select
-            className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
-            defaultValue={player}
-            id="player"
-            name="player"
-          >
+          <label className="text-sm font-semibold text-bright" htmlFor="player">Spelare</label>
+          <select className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright" defaultValue={player} id="player" name="player">
             <option value="">Alla</option>
-            {profiles.map((profile) => (
-              <option key={profile.id} value={profile.id}>
-                {profile.display_name || profile.username}
-              </option>
+            {players.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-neutral-800" htmlFor="status">
-            Status
-          </label>
-          <select
-            className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
-            defaultValue={status}
-            id="status"
-            name="status"
-          >
+          <label className="text-sm font-semibold text-bright" htmlFor="status">Status</label>
+          <select className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright" defaultValue={status} id="status" name="status">
             <option value="">Alla</option>
             {["pending", "won", "lost", "void"].map((item) => (
-              <option key={item} value={item}>
-                {formatStatus(item)}
-              </option>
+              <option key={item} value={item}>{formatStatus(item)}</option>
             ))}
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-neutral-800" htmlFor="match">
-            Match
-          </label>
+          <label className="text-sm font-semibold text-bright" htmlFor="match">Match</label>
           <input
-            className="focus-ring w-full rounded-md border border-neutral-300 px-3 py-2"
+            className="focus-ring w-full rounded-md border border-border bg-rim px-3 py-2 text-bright"
             defaultValue={getParam(searchParams?.match)}
             id="match"
             name="match"
@@ -124,10 +65,7 @@ export default async function BetsPage({ searchParams }: BetsPageProps) {
           />
         </div>
         <div className="flex items-end">
-          <button
-            className="focus-ring min-h-10 w-full rounded-md bg-grass px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#11633c]"
-            type="submit"
-          >
+          <button className="focus-ring min-h-10 w-full rounded-md bg-turf px-4 py-2 text-sm font-semibold text-white transition hover:bg-turf2" type="submit">
             Filtrera
           </button>
         </div>
@@ -135,9 +73,9 @@ export default async function BetsPage({ searchParams }: BetsPageProps) {
       {bets.length === 0 ? (
         <EmptyState text="Inga spel matchar filtret." title="Tom lista" />
       ) : (
-        <div className="table-scroll rounded-md border border-neutral-200 bg-white shadow-soft">
+        <div className="table-scroll rounded-lg border border-border bg-surface shadow-card">
           <table className="w-full border-collapse text-left text-sm">
-            <thead className="bg-neutral-100 text-xs uppercase tracking-normal text-neutral-600">
+            <thead className="bg-rim text-xs uppercase tracking-wider text-muted">
               <tr>
                 <th className="px-4 py-3">Spelare</th>
                 <th className="px-4 py-3">Match</th>
@@ -149,20 +87,20 @@ export default async function BetsPage({ searchParams }: BetsPageProps) {
                 <th className="px-4 py-3">Skapat</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-y divide-border">
               {bets.map((bet) => (
                 <tr key={bet.id}>
-                  <td className="px-4 py-3 font-semibold">
-                    {bet.profiles?.display_name ?? "Okänd"}
+                  <td className="px-4 py-3 font-semibold">{bet.profiles?.display_name ?? "Okänd"}</td>
+                  <td className="px-4 py-3">
+                    {bet.matches
+                      ? `#${bet.matches.match_no} ${bet.matches.home_team} - ${bet.matches.away_team}`
+                      : bet.match_label ?? "Fritext"}
                   </td>
-                  <td className="px-4 py-3">{matchName(bet)}</td>
                   <td className="px-4 py-3">{bet.description}</td>
                   <td className="px-4 py-3">{formatDecimal(bet.odds)}</td>
                   <td className="px-4 py-3">{formatCurrency(bet.stake)}</td>
                   <td className="px-4 py-3">{formatCurrency(bet.payout)}</td>
-                  <td className="px-4 py-3">
-                    <StatusPill status={bet.status} />
-                  </td>
+                  <td className="px-4 py-3"><StatusPill status={bet.status} /></td>
                   <td className="px-4 py-3">{formatDate(bet.created_at)}</td>
                 </tr>
               ))}

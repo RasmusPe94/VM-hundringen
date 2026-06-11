@@ -10,12 +10,9 @@ type SubmitButtonProps = {
 };
 
 const variants = {
-  primary:
-    "bg-grass text-white hover:bg-[#11633c] disabled:bg-neutral-400",
-  secondary:
-    "border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100 disabled:text-neutral-400",
-  danger:
-    "bg-[#b42318] text-white hover:bg-[#8f1d14] disabled:bg-neutral-400"
+  primary:   "bg-turf text-white hover:bg-turf2 disabled:opacity-50",
+  secondary: "border border-border bg-rim text-body hover:bg-fence disabled:opacity-40",
+  danger:    "bg-danger text-white hover:bg-danger2 disabled:opacity-50"
 };
 
 export function SubmitButton({
