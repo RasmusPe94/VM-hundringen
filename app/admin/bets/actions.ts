@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { money, toNumber } from "@/lib/format";
-import { deleteBet, getBet, getPendingBet, settleBet, updateAnyBet, updateAnyPendingBet } from "@/lib/db/data";
+import { deleteBet, getBet, getPendingBet, settleBet, updateAnyBet } from "@/lib/db/data";
 import { redirectPath } from "@/lib/strings";
 import { betInputSchema, formError, settleInputSchema } from "@/lib/validation";
 

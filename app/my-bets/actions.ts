@@ -6,7 +6,6 @@ import { money, toNumber } from "@/lib/format";
 import {
   deleteBet,
   getCurrentBalance,
-  getBet,
   getOwnBet,
   getPendingOwnBet,
   settleBet,
